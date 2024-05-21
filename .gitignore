@@ -1,0 +1,14 @@
+*.DS_Store
+*/__pycache__/*
+*~
+*#
+clusters_loc
+clusters_loc2
+disguised_loc
+disguised_results_loc
+embedding_dir_loc
+embedding_dir_loc2
+results_loc
+results_loc2
+datasets_loc
+venv
