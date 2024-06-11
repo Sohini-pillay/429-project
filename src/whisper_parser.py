@@ -64,7 +64,7 @@ class IPv4Header:
         self.dest_addr = dest_addr
         self.protocol = protocol
         self.protocol_type = proto_type
-        self.header_length = header_length;
+        self.header_length = header_length
         self.is_fragment = is_fragment
         #if self.protocol_type is not None:
         if False:

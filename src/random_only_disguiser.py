@@ -1,4 +1,3 @@
-
 """
 This disguises malicious packets to appear benign.
 """
@@ -13,6 +12,8 @@ import torch
 import whisper_parser
 import whisper_model
 from whisper_parser import IPv4Header as IP4
+
+import random
 
 from run_detection import get_detection_arguments
 
@@ -172,40 +173,43 @@ def make_modifications(flow_options, best_selections, sequence_nums, packet_look
     """
     for i, seq_num in enumerate(sequence_nums):
         packet_header, packet_data, packet_label, high_timestamp, low_timestamp = packet_lookup[seq_num]
-        num_nop_dwords = flow_options[i][best_selections[i]]
+        # num_nop_dwords = flow_options[i][best_selections[i]]
 
-        # Modify IHL
-        ihl_end = IP4.IHL_OFF + IP4.IHL_LEN
-        ihl_byte = packet_data[IP4.IHL_OFF]
-        version = ihl_byte & IP4.VERSION_MASK
-        ihl = ihl_byte & IP4.IHL_MASK
-        new_ihl = ihl + num_nop_dwords
-        packet_data = packet_data[:IP4.IHL_OFF] + bytes([new_ihl + version]) + packet_data[ihl_end:]
+        # # Modify IHL
+        # ihl_end = IP4.IHL_OFF + IP4.IHL_LEN
+        # ihl_byte = packet_data[IP4.IHL_OFF]
+        # version = ihl_byte & IP4.VERSION_MASK
+        # ihl = ihl_byte & IP4.IHL_MASK
+        # new_ihl = ihl + num_nop_dwords
+        # packet_data = packet_data[:IP4.IHL_OFF] + bytes([new_ihl + version]) + packet_data[ihl_end:]
 
-        # Modify Total Len
-        total_len_end = IP4.LENGTH_OFF + IP4.LENGTH_LEN
-        total_len = int.from_bytes(
-            packet_data[IP4.LENGTH_OFF:total_len_end], "big")
-        total_len += 4 * num_nop_dwords
-        len_bytes = int.to_bytes(total_len, 2, "big")
-        packet_data = packet_data[:IP4.LENGTH_OFF] + len_bytes + packet_data[total_len_end:]
+        # # Modify Total Len
+        # total_len_end = IP4.LENGTH_OFF + IP4.LENGTH_LEN
+        # total_len = int.from_bytes(
+        #     packet_data[IP4.LENGTH_OFF:total_len_end], "big")
+        # total_len += 4 * num_nop_dwords
+        # len_bytes = int.to_bytes(total_len, 2, "big")
+        # packet_data = packet_data[:IP4.LENGTH_OFF] + len_bytes + packet_data[total_len_end:]
+
+        # Modify timestamp
+        low_timestamp += random.randint(1, 1000)
 
         # Add nop option packets
-        nop_val = 0x01
-        header_end = IP4.IP_HEAD_OFF+(ihl * 4)
-        cur_packet_header = packet_data[:header_end]
-        cur_packet_contents = packet_data[header_end:]
-        nops = bytes([nop_val] * num_nop_dwords * 4)
-        packet_data = cur_packet_header + nops + cur_packet_contents
+        # nop_val = 0x01
+        # header_end = IP4.IP_HEAD_OFF+(ihl * 4)
+        # cur_packet_header = packet_data[:header_end]
+        # cur_packet_contents = packet_data[header_end:]
+        # nops = bytes([nop_val] * num_nop_dwords * 4)
+        # packet_data = cur_packet_header + nops + cur_packet_contents
 
-        write_queue[seq_num] = packet_data, packet_label, high_timestamp, low_timestamp
+        write_queue[seq_num] = packet_header, packet_data, packet_label, high_timestamp, low_timestamp
         packet_lookup.pop(seq_num)
 
 
 def add_benign_to_write_queue(sequence_nums, packet_lookup, write_queue):
     for seq_num in sequence_nums:
         packet_header, packet_data, packet_label, high_timestamp, low_timestamp = packet_lookup[seq_num]
-        write_queue[seq_num] = packet_data, packet_label, high_timestamp, low_timestamp
+        write_queue[seq_num] = packet_header, packet_data, packet_label, high_timestamp, low_timestamp
         packet_lookup.pop(seq_num)
 
 
@@ -217,7 +221,8 @@ def write_packets_sequentially(shb, writer, label_list, write_queue, cur_seq_no)
     """
     while cur_seq_no in write_queue:
         epb = shb.new_member(blocks.EnhancedPacket)
-        packet_data, packet_label, high_timestamp, low_timestamp = write_queue[cur_seq_no]
+        packet_header, packet_data, packet_label, high_timestamp, low_timestamp = write_queue[cur_seq_no]
+        epb.packet_header = packet_header
         epb.packet_data = packet_data
         epb.timestamp_low = low_timestamp
         epb.timestamp_high = high_timestamp

@@ -1,16 +1,14 @@
-# idsattack
-Packet modification to fool machine learning based network Intrusion Detection Systems (IDSs).
+# NIDS Attack
+Experimental packet modifications intended to evade machine learning based Network Intrusion Detection Systems (NIDSs).
 
 ## System Overview
-The goal of our system is to modify malicious traffic to make it appear benign to a target Intrusion Detection System (IDS). 
-However, the important constraint in our project is that our modifications to traffic must not affect their functionality downstream!
+The goal of our system is to modify malicious traffic to make it appear benign to a target Network Intrusion Detection System (NIDS). 
+The important constraint in our project is that our modifications to traffic must not affect their functionality and adhere to netowrk protocols.
 
-![System Model](figures/system_model.drawio.png)
+![System Model](figures/system_model.png)
 
 ## Results
-By adding nop options to IPv4 packet headers in a way that is specifically targeted at the IDS [Whisper](https://github.com/fuchuanpu/Whisper), we see the following changes in AUC on Whisper's testing set. 
-The following results are for a version of Whisper that is trained on the attack datasets themselves. 
-See our paper for results with Whisper trained on MAWI 06.10.2022
+We tested various methods of perturbing the timestamp of malicious traffic with the goal of reducing our targeted NIDS [Whisper's](https://github.com/fuchuanpu/Whisper) detection rate. We see the following changes in AUC on Whisper's testing set. 
 
 | Attack Type         | Clean Traffic AUC   | Modified Traffic AUC  |
 | ------------------- | ------------------- | --------------------- |
@@ -28,11 +26,7 @@ We evaluate our system on datasets from [Kitsune](https://github.com/ymirsky/Kit
 The datasets can be found in the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/machine-learning-databases/00516).
 
 The script `download_datasets.py` will download the datasets from the repository. 
-Alternatively, you can use these links to download archives containing the datasets:
-- [Archive with all datasets](https://drive.google.com/file/d/10uN4b4vnvONGEzB54QBfb5V6X39eg571/view?usp=share_link)
-- [Archive with training set](https://drive.google.com/file/d/1ephZY35lOUj3i7bzATCmcxgBIymjseEi/view?usp=share_link)
-- [Archive with testing set](https://drive.google.com/file/d/10NBdq8gkAdT-7husfMtoorir0hzw9MJm/view?usp=share_link)
-- [Archive with disguised testing set](https://drive.google.com/file/d/172IttXzyIResigHv98g1kkEb3BFqZvj-/view?usp=share_link)
+The script `split_pcaps.py _____ _____` will split the the full dataset into subsets for training and testing. 20% is used for training while the remaining 80% is used for testing.
 
 
 ## Reproducing Results

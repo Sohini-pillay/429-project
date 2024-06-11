@@ -199,6 +199,8 @@ def split_temporally(raw_dataset_loc,
                     cur_shb = train_shb if is_train else test_shb
                     epb = cur_shb.new_member(blocks.EnhancedPacket)
                     epb.packet_data = copy.deepcopy(block.packet_data)
+                    epb.timestamp_low = block.timestamp_low
+                    epb.timestamp_high = block.timestamp_high
                     cur_writer = train_writer if is_train else test_writer
                     cur_writer.write_block(epb)
                     cur_label_list = train_label_list if is_train else test_label_list
