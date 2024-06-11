@@ -2,8 +2,7 @@
 Experimental packet modifications intended to evade machine learning based Network Intrusion Detection Systems (NIDSs).
 
 ## System Overview
-The goal of our system is to modify malicious traffic to make it appear benign to a target Network Intrusion Detection System (NIDS). 
-The important constraint in our project is that our modifications to traffic must not affect their functionality and adhere to netowrk protocols.
+The goal of our system is to modify malicious traffic to make it appear benign to a target Network Intrusion Detection System (NIDS) by perturbing the timestamp and adding no-ops to the header. The important constraint in our project is that our modifications to traffic must not affect their functionality and adhere to netowrk protocols.
 
 ![System Model](figures/system_model.png)
 
