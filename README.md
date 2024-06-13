@@ -7,31 +7,31 @@ The goal of our system is to modify malicious traffic to make it appear benign t
 ![System Model](figures/system_model.png)
 
 ## Results
-We tested various methods of perturbing the timestamp of malicious traffic with the goal of reducing our targeted NIDS [Whisper's](https://github.com/fuchuanpu/Whisper) detection rate. We see the following changes in AUC on Whisper's testing set. 
+We tested various methods of perturbing the timestamp of malicious traffic with the goal of reducing our targeted NIDS [Whisper's](https://github.com/fuchuanpu/Whisper) detection rate. 
 
 | Attack Type         | Clean Traffic AUC   | Modified Traffic AUC  |
 | ------------------- | ------------------- | --------------------- |
-| SSL Renegotiation   |             0.72    |               0.53    |
-| Fuzzing             |             0.61    |               0.45    |
-| Syn DoS             |             0.56    |               0.33    |
-| Video Injection     |             0.52    |               0.31    |
-| ARP MITM            |             0.51    |               0.30    |
-| Active Wiretap      |             0.51    |               0.31    |
-| OS Scan             |             0.04    |               0.04    |
-| SSDP Flood          |           < 0.01    |             < 0.01    |
+| SSL Renegotiation   |             0.63    |               0.46    |
+| Syn DoS             |             0.54    |               0.32    |
+| Video Injection     |             0.56    |               0.30    |
+| ARP MITM            |             0.52    |               0.29    |
+| Active Wiretap      |             0.45    |               0.27    |
+| OS Scan             |             0.58    |               0.58    |
+| SSDP Flood          |             0.87    |               0.87    |
+
 
 ## Datasets
 We evaluate our system on datasets from [Kitsune](https://github.com/ymirsky/Kitsune-py). 
 The datasets can be found in the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/machine-learning-databases/00516).
 
 The script `download_datasets.py` will download the datasets from the repository. 
-The script `split_pcaps.py _____ _____` will split the the full dataset into subsets for training and testing. 20% is used for training while the remaining 80% is used for testing.
+The script `split_pcaps.py split_datasets_loc num_processes` will split the the full dataset into subsets for training and testing. 20% is used for training while the remaining 80% is used for testing The split datatsets will be written to`split_datasets_loc` in the folders train and test. The number of processes used is defined by `num_processes`.
 
 
 ## Reproducing Results
 ### Setting up Environment
 1. This projects dependencies are listed in `requirements.txt`. You can create a virtual environment with the required dependencies with `python3 pip install -r requirements.txt`. 
-2. You will need to download one or more of the datasets listed above. The AUC scores for "clean traffic" were collected for the [testing set](https://drive.google.com/file/d/172IttXzyIResigHv98g1kkEb3BFqZvj-/view?usp=share_link). The AUC scores for "disguised traffic" were collected for the [disguised testing set](https://drive.google.com/file/d/172IttXzyIResigHv98g1kkEb3BFqZvj-/view?usp=share_link). The version of Whisper used for detection was trained on benign traffic from the [training set](https://drive.google.com/file/d/10NBdq8gkAdT-7husfMtoorir0hzw9MJm/view?usp=share_link). 
+2. You will need to download one or more of the datasets listed above by following the download and split instructions. The AUC scores for "clean traffic" were collected on the testing set. The AUC scores for "disguised traffic" were collected on the disguised testing set.
 
 ### Training Whisper
 1. Following [the paper describing Whisper](https://arxiv.org/pdf/2106.14707.pdf), we use only benign traffic from the first 20% of each traffic dataset to find cluster centroids. Training entails two steps. 
@@ -50,11 +50,15 @@ The script `split_pcaps.py _____ _____` will split the the full dataset into sub
   - `plot_title` is what to name the ROC curve. 
 
 ### Disguising Traffic
-1. To disguise the traffic in the testing set, you can run `python3 disguiser.py <datasets_loc> <centroid_loc> <results_loc> <num_processes>`. 
+1. To disguise the traffic in the testing set by ONLY modifying the header length, you can run `python3 benchmark_disguiser.py <datasets_loc> <centroid_loc> <results_loc> <num_processes>`. 
   - `datasets_loc` is a directory that contains a subdirectory for each type of traffic in the testing set. 
   - `centroid_loc` is a directory that contains a json file full of centroids for each attack type. 
   - The program will write a heirarchy mirroring `datasets_loc` at `results_loc`. However, the .pcapng files at `results_loc` will be "disguised."
   - The program will run `num_processes` in parallel. Each process works on a different dataset. 
+2. The disguising traffic process detailed in step 1 can be repeated using `python3 random_and_header_disguiser.py <datasets_loc> <centroid_loc> <results_loc> <num_processes>` to disguise the traffic with a random timestamp perturbation and header modification.
+3. The disguising traffic process detailed in step 1 can be repeated using `python3 random_only_disguiser.py <datasets_loc> <centroid_loc> <results_loc> <num_processes>` to disguise the traffic with only a random timestamp perturbation.
+4. The disguising traffic process detailed in step 1 can be repeated using `python3 fixed_disguiser.py <datasets_loc> <centroid_loc> <results_loc> <num_processes>` to disguise the traffic with a fxed timestamp perturbation and header modification.
+5. The disguising traffic process detailed in step 1 can be repeated using `python3 fixed_disguiser.py <datasets_loc> <centroid_loc> <results_loc> <num_processes>` to disguise the traffic with a loss-informed timestamp perturbation and header modification.
 
 ### Evaluating Whisper on Disguised Traffic
 The process to evaluate Whisper on disguised traffic is largely the same as the process for evaluating Whisper on the regular testing set. Instead of using the directory of the testing set for `datasets_loc`, use the directory generated by running the disguiser. 
